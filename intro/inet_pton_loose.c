@@ -56,12 +56,12 @@ int inet_pton_loose(int family, const char *strptr, void *addrptr)
     return 0;
 }
 
+
 int main(int argc, char **argv)
 {
     char strptr[64] = {0};
     struct  sockaddr_in servaddr;
     struct sockaddr_in6 servaddr6;
-
 
     if (argc != 2) {
         printf("usage: ./a.out <IPaddress>\n");
@@ -85,4 +85,35 @@ int main(int argc, char **argv)
     }
 
     return 0;
+}
+
+/**
+ * @brief 
+ * 
+ * @param cmdstring 
+ * @return int 如果fork失败，system函数返回-1；如果exec执行成功，则返回command通过exit或return返回的值
+ */
+int system(const char *cmdstring)
+{
+    pid_t pid;
+    int status;
+
+    if (cmdstring == NULL) {
+        return 1;
+    }
+
+    if((pid = fork()) < 0) {
+        status = -1;
+    } else if (pid == 0) {
+        execl("/bin/sh", "sh", "-c", cmdstring , NULL);
+        _exit(127); /* exec执行失败返回127，注意exec只在执行失败才返回到调用者，成功时会将控制权传递给新程序 */
+    } else {
+        while (waitpid(pid, &status, 0) < 0) {
+            if (errno != EINTR) {
+                status = -1;
+                break;
+            }
+        }
+    }
+    return(status);
 }
